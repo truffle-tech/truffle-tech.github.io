@@ -41,7 +41,18 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 header{display:flex;flex-direction:column;gap:14px;max-width:1000px}
 .brand{font:700 18px var(--f-display);letter-spacing:-.02em}
 h1{font-family:var(--f-display);font-weight:600;font-size:clamp(27px,3.9vw,42px);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.02em}
-h1 .rest{color:var(--muted);font-weight:500}
+h1 .rest{display:block;color:var(--muted);font-weight:500}
+
+/* landing: full-screen living network shown before the page */
+html.locked,html.locked body{overflow:hidden}
+.landing{position:fixed;inset:0;z-index:50;background:var(--bg);cursor:pointer;transition:opacity .8s ease,visibility .8s}
+.landing:focus{outline:none}
+.landing.gone{opacity:0;visibility:hidden;pointer-events:none}
+#net{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lt{position:absolute;top:max(8vh,36px);left:0;right:0;text-align:center;font:700 clamp(76px,15vw,200px)/.9 var(--f-display);letter-spacing:-.055em;color:var(--ink);pointer-events:none;user-select:none}
+.lhint{position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom,0px));text-align:center;font:12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);pointer-events:none;animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.lhint{animation:none}.landing{transition:none}}
 .lede{display:flex;flex-direction:column;gap:10px;max-width:66ch}
 .lede p{margin:0;color:var(--muted);font-size:16.5px;text-wrap:pretty}
 .lede b{color:var(--ink);font-weight:600}
@@ -163,10 +174,16 @@ footer{font-size:12.5px;color:var(--muted);max-width:75ch}
 </style>
 </head>
 <body>
+<div class="landing" id="landing" role="button" tabindex="0" aria-label="truffle. Click anywhere to enter">
+  <canvas id="net" aria-hidden="true"></canvas>
+  <div class="lt" aria-hidden="true">truffle</div>
+  <div class="lhint" id="lhint" aria-hidden="true">Click anywhere</div>
+</div>
+<script>if(location.hash!=='#map')document.documentElement.classList.add('locked');else document.getElementById('landing').remove();</script>
 <div class="wrap">
   <header data-lit="head">
     <div class="brand">truffle</div>
-    <h1>We model the world as it is <span class="rest">— integrating complex systems such as markets, science, geopolitics, and more.</span></h1>
+    <h1>We model the world as it is <span class="rest">integrating complex systems such as markets, science, geopolitics, and more.</span></h1>
     <div class="lede">
       <p>Most big money decisions, from which startup to back to which risk to hedge, still run on <b>spreadsheets, a few headline numbers and gut feeling</b>. That squeezes a rich, connected world into a handful of metrics. It looks at one company at a time, mostly at its past, and misses the knock-on effects that often decide the outcome.</p>
       <p>We combine models with live data to see the whole system: what depends on what, what happens when something breaks, and what would have happened otherwise. <b>Less guesswork, more evidence</b>, with simulations and what-ifs you can test before you commit.</p>
@@ -623,9 +640,9 @@ const TOUR=[
    return `<ul class="layers">${h.map((t,c)=>`<li data-col="${c}"><b>${t}</b>${d[c]}</li>`).join('')}</ul>`}},
  {demo:0,w:[],hint:'',
   title:'What this means for an investment',
-  body:()=>`<p>Say you're weighing an investment in the <b>${nm('bst')}</b>. Its pitch deck shows one company.</p>
-   <p>The map shows what the bet really rests on: the price of ${nm('lith')}, progress in ${nm('sci_ss')}, whether the ${nm('ev')} keeps buying, and whether the ${nm('vc')} can fund the next round.</p>
-   <p>Risk and upside travel along these lines, usually long before they show up in the company's own numbers.</p>`},
+  body:()=>`<p>Imagine you're deciding whether to invest in the <b>${nm('bst')}</b>. A usual analysis looks only at the company itself: its team, its numbers, its pitch.</p>
+   <p>The map shows what the investment really depends on: the price of ${nm('lith')}, progress in ${nm('sci_ss')}, whether the ${nm('ev')} keeps buying its batteries, and whether the ${nm('vc')} can fund its next round.</p>
+   <p>Risks and opportunities travel along these lines, often long before they show up in the company's own numbers.</p>`},
  {demo:0,w:['focus'],hint:'Hover or tap a dot',
   title:'Nothing moves on its own',
   body:()=>`<p><b>Hover or tap any dot</b> to light up what it depends on and what depends on it.</p>
@@ -715,7 +732,166 @@ document.addEventListener('keydown',ev=>{
 
 new ResizeObserver(()=>{layout();drawChart()}).observe(cv);
 addEventListener('resize',drawChart);
+addEventListener('truffle:enter',()=>{born=performance.now()});
 layout();renderEvents();requestAnimationFrame(tick);
+})();
+</script>
+
+<script>
+/* Landing: a small agent-based network. Nodes are born and attach preferentially (network effects),
+   weak ones die out, shocks spread ring by ring, money herds into a rising node, clusters merge and split. */
+(function(){
+const land=document.getElementById('landing');if(!land)return;
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv=document.getElementById('net'),g=cv.getContext('2d');
+const FM='"Fragment Mono", ui-monospace, monospace';
+if(matchMedia('(hover: none)').matches)document.getElementById('lhint').textContent='Tap anywhere';
+let W=0,H=0,top0=0,tok={},running=true,t=0,last=performance.now();
+function readTok(){const cs=getComputedStyle(document.documentElement);['bg','surface','ink','muted','shock','grow','cash'].forEach(k=>tok[k]=cs.getPropertyValue('--'+k).trim())}
+function alpha(hex,a){const h=hex.replace('#','');const n=parseInt(h.length===3?h.replace(/./g,'$&$&'):h,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,Math.min(1,a))})`}
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)], clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function size(){const d=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;g.setTransform(d,0,0,d,0,0);
+  top0=document.querySelector('.lt').getBoundingClientRect().bottom+28}
+const B=()=>({x0:30,x1:W-30,y0:top0,y1:H-64});
+const target=()=>Math.round(clamp(W*(H-top0)/9000,28,72));
+
+let nodes=[],links=[],parts=[],rings=[],tags=[],pend=[],clusters=[],deg=new Map();
+const alive=()=>nodes.filter(n=>!n.die);
+function newCluster(x,y){const c={x,y,tx:x,ty:y,lock:0};clusters.push(c);return c}
+function addNode(c,x,y){const n={c,x,y,vx:0,vy:0,born:t,die:0,heat:0,cash:Math.random()<.16,herd:0,boost:0,goal:null,goalUntil:0,ne:false};nodes.push(n);return n}
+const linkOf=(a,b)=>links.find(l=>!l.die&&((l.a===a&&l.b===b)||(l.a===b&&l.b===a)));
+function link(a,b){if(!a||!b||a===b||a.die||b.die||linkOf(a,b))return null;const l={a,b,born:t,die:0};links.push(l);return l}
+function degrees(){deg=new Map();nodes.forEach(n=>deg.set(n,0));links.forEach(l=>{if(l.die)return;deg.set(l.a,deg.get(l.a)+1);deg.set(l.b,deg.get(l.b)+1)})}
+function prefPick(pool){let s=0;const w=pool.map(n=>{const x=1+Math.pow(deg.get(n)||0,1.4);s+=x;return x});let r=Math.random()*s;for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}return pool[pool.length-1]}
+function tag(x,y,text){if(tags.filter(q=>t-q.t0<2.6).length>=3)return;tags.push({x,y,text,t0:t})}
+function later(dt,fn){pend.push({at:t+dt,fn})}
+function kill(n){if(n.die)return;n.die=t;links.forEach(l=>{if(!l.die&&(l.a===n||l.b===n))l.die=t})}
+
+function init(){
+  const b=B(),k=clamp(Math.round(W/420)+1,2,4);
+  for(let i=0;i<k;i++)newCluster(b.x0+(i+.5)*(b.x1-b.x0)/k+rnd(-30,30),rnd(b.y0+70,b.y1-70));
+  const n0=target();
+  for(let i=0;i<n0;i++){const c=clusters[i%k],n=addNode(c,c.x+rnd(-70,70),c.y+rnd(-70,70));n.born=-9;degrees();
+    const pool=alive().filter(m=>m!==n&&m.c===c);if(pool.length)link(n,prefPick(pool));if(pool.length>3&&Math.random()<.4)link(n,prefPick(pool))}
+  for(let i=0;i<k+1;i++){const a=pick(nodes),z=pick(nodes);if(a.c!==z.c)link(a,z)}
+  links.forEach(l=>l.born=-9);
+  for(let i=0;i<240;i++)physics(1/60);
+}
+
+// ---- events ----
+function birth(){const A=alive();if(!A.length)return;const c=pick(clusters),pool=A.filter(n=>n.c===c),base=pool.length?pick(pool):pick(A);
+  const n=addNode(base.c,base.x+rnd(-26,26),base.y+rnd(-26,26));const p=pool.length>1?pool:A;degrees();
+  link(n,prefPick(p));if(Math.random()<.45)link(n,prefPick(p));
+  rings.push({n,t0:t,col:'grow',R:20});if(Math.random()<.3)tag(n.x,n.y,'new entrant')}
+function death(){const A=alive().filter(n=>t-n.born>6&&!n.goal);if(A.length<6)return;
+  A.sort((a,b)=>(deg.get(a)-3*a.heat)-(deg.get(b)-3*b.heat));const n=pick(A.slice(0,Math.max(1,Math.floor(A.length*.2))));
+  kill(n);if(Math.random()<.35)tag(n.x,n.y,'exit')}
+function shock(){const A=alive();if(A.length<6)return;const s=pick(A);
+  s.heat=1;rings.push({n:s,t0:t,col:'shock',R:46});tag(s.x,s.y,'shock');
+  const seen=new Set([s]);let front=[s];
+  for(let k=1;k<=4;k++){const nx=[];
+    front.forEach(a=>links.forEach(l=>{if(l.die)return;const b=l.a===a?l.b:l.b===a?l.a:null;if(!b||seen.has(b))return;seen.add(b);nx.push(b);
+      parts.push({l,from:a,t0:t+(k-1)*.5,dur:.5,col:'shock',r:2.6});
+      later(k*.5,()=>{b.heat=Math.min(1,b.heat+.9*Math.pow(.7,k-1));if(k===1&&deg.get(b)<=1&&Math.random()<.6)later(1.6,()=>{kill(b);tag(b.x,b.y,'exit')})})}));
+    front=nx}}
+function herd(){const A=alive();if(A.length<10)return;const tg=prefPick(A);tg.boost=1;tag(tg.x,tg.y,'herding');
+  const fol=A.filter(n=>n!==tg&&!linkOf(n,tg)).sort(()=>Math.random()-.5).slice(0,clamp(Math.floor(A.length/6),3,8));
+  fol.forEach((n,i)=>later(.25+i*.3,()=>{if(n.die||tg.die)return;n.herd=t+3.2;const l=link(n,tg);n.c=tg.c;n.goal=tg;n.goalUntil=t+2.5;
+    if(l)parts.push({l,from:n,t0:t,dur:.8,col:'cash',r:2.4})}))}
+function merge(){if(clusters.length<2)return;const a=pick(clusters);let b=null,bd=1e9;
+  clusters.forEach(c=>{if(c===a)return;const d=Math.hypot(c.x-a.x,c.y-a.y);if(d<bd){bd=d;b=c}});
+  const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;a.tx=b.tx=mx;a.ty=b.ty=my;a.lock=b.lock=t+4;a.merging=b.merging=true;tag(mx,my,'merging');
+  later(2.8,()=>{if(!clusters.includes(a)||!clusters.includes(b))return;nodes.forEach(n=>{if(n.c===b)n.c=a});clusters=clusters.filter(c=>c!==b);a.merging=false;a.lock=t+1.5;
+    const pa=alive().filter(n=>n.c===a);degrees();for(let i=0;i<3&&pa.length>2;i++)link(pick(pa),prefPick(pa))});
+  later(3.2,()=>{a.merging=false})}
+function split(){const b=B();const big=clusters.map(c=>({c,ns:alive().filter(n=>n.c===c)})).sort((x,y)=>y.ns.length-x.ns.length)[0];
+  if(!big||big.ns.length<9)return;const c=big.c,ang=rnd(0,Math.PI),ux=Math.cos(ang),uy=Math.sin(ang);
+  const nc=newCluster(c.x,c.y),d=clamp(W/6,90,170);
+  big.ns.forEach(n=>{if((n.x-c.x)*ux+(n.y-c.y)*uy>0)n.c=nc});
+  nc.tx=clamp(c.x+ux*d,b.x0+80,b.x1-80);nc.ty=clamp(c.y+uy*d,b.y0+60,b.y1-60);
+  c.tx=clamp(c.x-ux*d,b.x0+80,b.x1-80);c.ty=clamp(c.y-uy*d,b.y0+60,b.y1-60);c.lock=nc.lock=t+4;
+  let kept=0;links.forEach(l=>{if(l.die)return;if((l.a.c===nc&&l.b.c===c)||(l.a.c===c&&l.b.c===nc)){if(kept<1&&Math.random()<.5)kept++;else l.die=t}});
+  tag(c.x,c.y,'splitting')}
+
+// ---- physics ----
+function physics(dt){
+  const b=B();
+  clusters.forEach(c=>{
+    if(t>c.lock&&Math.random()<dt*.1){c.tx=clamp(c.x+rnd(-140,140),b.x0+90,b.x1-90);c.ty=clamp(c.y+rnd(-90,90),b.y0+70,b.y1-70)}
+    const k=Math.min(1,dt*.6);c.x+=(c.tx-c.x)*k;c.y+=(c.ty-c.y)*k});
+  const minD=clamp(Math.min(W,(H-top0)*1.6)/3,150,320);
+  for(let i=0;i<clusters.length;i++)for(let j=i+1;j<clusters.length;j++){const a=clusters[i],c=clusters[j];if(a.merging&&c.merging)continue;
+    const dx=c.tx-a.tx,dy=c.ty-a.ty,d=Math.hypot(dx,dy)||1;if(d>=minD)continue;const push=(minD-d)*.5*Math.min(1,dt*2)/d;
+    a.tx=clamp(a.tx-dx*push,b.x0+80,b.x1-80);a.ty=clamp(a.ty-dy*push,b.y0+60,b.y1-60);c.tx=clamp(c.tx+dx*push,b.x0+80,b.x1-80);c.ty=clamp(c.ty+dy*push,b.y0+60,b.y1-60)}
+  for(let i=0;i<nodes.length;i++){const p=nodes[i];
+    for(let j=i+1;j<nodes.length;j++){const q=nodes[j];const dx=q.x-p.x,dy=q.y-p.y,d2=dx*dx+dy*dy;if(d2>9000||d2<.01)continue;
+      const d=Math.sqrt(d2),f=Math.min(900,9000/d)/d;p.vx-=dx*f*dt;p.vy-=dy*f*dt;q.vx+=dx*f*dt;q.vy+=dy*f*dt}}
+  links.forEach(l=>{if(l.die)return;const dx=l.b.x-l.a.x,dy=l.b.y-l.a.y,d=Math.hypot(dx,dy)||1,f=5*(d-54)/d;
+    l.a.vx+=dx*f*dt;l.a.vy+=dy*f*dt;l.b.vx-=dx*f*dt;l.b.vy-=dy*f*dt});
+  const damp=Math.exp(-3*dt);
+  nodes.forEach(n=>{
+    n.vx+=(n.c.x-n.x)*1.1*dt;n.vy+=(n.c.y-n.y)*1.1*dt;
+    if(n.goal&&t<n.goalUntil&&!n.goal.die){n.vx+=(n.goal.x-n.x)*2.2*dt;n.vy+=(n.goal.y-n.y)*2.2*dt}else n.goal=null;
+    if(n.x<b.x0)n.vx+=(b.x0-n.x)*40*dt;if(n.x>b.x1)n.vx-=(n.x-b.x1)*40*dt;
+    if(n.y<b.y0)n.vy+=(b.y0-n.y)*40*dt;if(n.y>b.y1)n.vy-=(n.y-b.y1)*40*dt;
+    n.vx=(n.vx+rnd(-14,14)*dt)*damp;n.vy=(n.vy+rnd(-14,14)*dt)*damp;
+    n.x+=n.vx*dt;n.y+=n.vy*dt});
+}
+
+let nextBirth=.8,nextEv=1.6;
+function step(dt){
+  t+=dt;degrees();
+  if(t>nextBirth){nextBirth=t+rnd(.45,1.1);const A=alive(),T=target();if(A.length<T*1.15)birth();if(A.length>T*.85&&Math.random()<.6)death()}
+  if(t>nextEv){nextEv=t+rnd(2.2,3.4);const r=Math.random(),k=clusters.length,k0=clamp(Math.round(W/380)+1,2,4);
+    if(k<k0&&r<.4)split();else if(k>k0&&r<.4)merge();else if(r<.38)shock();else if(r<.62)herd();else if(r<.81)(k>1?merge():split());else split()}
+  // ties decay: links between clusters fade fast, old links slowly; nodes left with none drift off and exit
+  links.forEach(l=>{if(l.die||t-l.born<4)return;const cross=l.a.c!==l.b.c;if(Math.random()<dt*(cross?.14:(t-l.born>14?.012:0)))l.die=t});
+  const due=pend.filter(p=>t>=p.at);pend=pend.filter(p=>t<p.at);due.forEach(p=>p.fn());
+  nodes.forEach(n=>{n.heat=Math.max(0,n.heat-dt*.3);n.boost=Math.max(0,n.boost-dt*.1);
+    if(!n.ne&&!n.die&&deg.get(n)>=8){n.ne=true;if(t>3){tag(n.x,n.y,'network effect');rings.push({n,t0:t,col:'cash',R:30})}}});
+  nodes=nodes.filter(n=>!n.die||t-n.die<1.3);
+  const live=new Set(nodes);links=links.filter(l=>live.has(l.a)&&live.has(l.b)&&!(l.die&&t-l.die>.9));
+  clusters=clusters.filter(c=>nodes.some(n=>n.c===c));
+  if(!RM&&Math.random()<dt*links.length*.14){const l=pick(links);if(l&&!l.die){const fwd=Math.random()<.5;parts.push({l,from:fwd?l.a:l.b,t0:t,dur:rnd(1.4,2.4),col:(l.a.cash||l.b.cash)?'cash':'muted',r:1.7})}}
+  parts=parts.filter(p=>t-p.t0<p.dur);rings=rings.filter(r=>t-r.t0<1.2);tags=tags.filter(q=>t-q.t0<2.8);
+  physics(dt);
+}
+
+// ---- drawing ----
+function draw(){
+  readTok();g.clearRect(0,0,W,H);
+  links.forEach(l=>{const fi=Math.min(1,(t-l.born)/.6),fo=l.die?Math.max(0,1-(t-l.die)/.9):1,f=fi*fo;
+    const heat=Math.min(l.a.heat,l.b.heat),herding=(l.a.goal===l.b||l.b.goal===l.a);
+    let col=tok.muted,al=.24;if(herding){col=tok.cash;al=.6}else if(l.a.cash&&l.b.cash){col=tok.cash;al=.3}
+    if(heat>.12){col=tok.shock;al=.25+.55*heat}
+    g.strokeStyle=alpha(col,al*f);g.lineWidth=herding||heat>.12?1.4:1;g.beginPath();g.moveTo(l.a.x,l.a.y);g.lineTo(l.b.x,l.b.y);g.stroke()});
+  parts.forEach(p=>{const u=(t-p.t0)/p.dur;if(u<0||u>1)return;const a=p.from,b=p.l.a===a?p.l.b:p.l.a;
+    g.fillStyle=alpha(tok[p.col],(p.col==='muted'?.7:.95)*Math.sin(Math.PI*u));g.beginPath();g.arc(a.x+(b.x-a.x)*u,a.y+(b.y-a.y)*u,p.r,0,7);g.fill()});
+  rings.forEach(r=>{const u=(t-r.t0)/1.2;g.strokeStyle=alpha(tok[r.col],.7*(1-u));g.lineWidth=1.5;g.beginPath();g.arc(r.n.x,r.n.y,6+r.R*Math.sqrt(u),0,7);g.stroke()});
+  nodes.forEach(n=>{const age=t-n.born,pop=age>=.5?1:1+2.2*Math.pow(age/.5-1,3)+1.2*Math.pow(age/.5-1,2);
+    const s=Math.max(0,pop)*(n.die?Math.max(0,1-(t-n.die)/1.3):1);if(s<=0)return;
+    const r=(2.4+1.15*Math.sqrt(deg.get(n)||0))*(1+.5*n.boost)*s;
+    if(n.heat>.05){g.fillStyle=alpha(tok.shock,.14*n.heat);g.beginPath();g.arc(n.x,n.y,r+5+10*n.heat,0,7);g.fill()}
+    let fill=tok.surface,stroke=tok.ink;
+    if(n.cash||t<n.herd){fill=alpha(tok.cash,.9);stroke=tok.cash}
+    if(n.heat>.05){fill=alpha(tok.shock,.3+.7*n.heat);stroke=tok.shock}
+    if(n.die){stroke=alpha(tok.muted,.8);fill=tok.surface}
+    g.fillStyle=fill;g.strokeStyle=stroke;g.lineWidth=1.4;g.beginPath();g.arc(n.x,n.y,r,0,7);g.fill();g.stroke()});
+  g.font='10.5px '+FM;g.textAlign='center';
+  tags.forEach(q=>{const u=t-q.t0,a=u<.3?u/.3:u>2?Math.max(0,(2.8-u)/.8):1;g.fillStyle=alpha(tok.muted,.95*a);g.fillText(q.text.toUpperCase(),q.x,q.y-18-4*Math.min(1,u))});
+}
+
+function loop(now){if(!running)return;const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;step(dt);draw();requestAnimationFrame(loop)}
+size();init();
+if(RM){draw()}else requestAnimationFrame(loop);
+addEventListener('resize',()=>{if(!running)return;size();if(RM)draw()});
+
+function enter(){if(land.classList.contains('gone'))return;land.classList.add('gone');document.documentElement.classList.remove('locked');
+  dispatchEvent(new Event('truffle:enter'));setTimeout(()=>{running=false;land.remove()},RM?0:850)}
+land.addEventListener('click',enter);
+land.addEventListener('keydown',e=>{if(['Enter',' ','Escape','ArrowDown','PageDown'].includes(e.key)){e.preventDefault();enter()}});
+land.addEventListener('wheel',e=>{if(e.deltaY>0)enter()},{passive:true});
+land.focus({preventScroll:true});
 })();
 </script>
 </body>
