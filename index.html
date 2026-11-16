@@ -1,58 +1,127 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>truffle System Map</title><meta name="description" content="Decisions sit inside systems. An interactive demo of how truffle maps who depends on whom, and what happens when one node gets pushed."><meta property="og:title" content="truffle System Map"><meta property="og:description" content="Decisions sit inside systems. An interactive demo of how truffle maps who depends on whom, and what happens when one node gets pushed."><meta property="og:type" content="website"><meta property="og:url" content="https://truffle-tech.github.io/"><meta name="twitter:card" content="summary"></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>truffle System Map</title>
+<meta name="description" content="We model the world as it is, integrating complex systems such as markets, science and geopolitics. A short interactive walkthrough of how truffle sees a market.">
+<meta property="og:title" content="truffle System Map">
+<meta property="og:description" content="We model the world as it is, integrating complex systems such as markets, science and geopolitics. A short interactive walkthrough of how truffle sees a market.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://truffle-tech.github.io/">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fragment+Mono&display=swap">
 <style>
-/* Layout: one stage (living system map + side panel), four steps that change the same picture. */
+/* Layout: header (claim, lede, walkthrough button) above one stage: living system map on the left,
+   coach card + panel on the right. The walkthrough drives the same map the free-explore tabs do. */
 :root{
-  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#14201B; --muted:#5D6C66; --line:#D3DCD7;
-  --shock:#DF5230; --grow:#1D8A6E; --cash:#4B5FE6; --warn:#C98C00;
-  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#14201B; --muted:#5D6C66; --line:#D3DCD7; --tint:#E6EFEA;
+  --shock:#DF5230; --grow:#1D8A6E; --cash:#4B5FE6; --warn:#C98C00; --on-accent:#FFFFFF;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif; --f-body:"Schibsted Grotesk",system-ui,sans-serif; --f-mono:"Fragment Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E1412; --surface:#151E1B; --ink:#E4EDE9; --muted:#93A49D; --line:#2A3833;
-  --shock:#FF7957; --grow:#3CC79E; --cash:#8B9AFF; --warn:#F0B53A; color-scheme:dark}}
+  --bg:#0E1412; --surface:#151E1B; --ink:#E4EDE9; --muted:#93A49D; --line:#2A3833; --tint:#17261F;
+  --shock:#FF7957; --grow:#3CC79E; --cash:#8B9AFF; --warn:#F0B53A; --on-accent:#06120D; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1412; --surface:#151E1B; --ink:#E4EDE9; --muted:#93A49D; --line:#2A3833;
-  --shock:#FF7957; --grow:#3CC79E; --cash:#8B9AFF; --warn:#F0B53A; color-scheme:dark}
+  --bg:#0E1412; --surface:#151E1B; --ink:#E4EDE9; --muted:#93A49D; --line:#2A3833; --tint:#17261F;
+  --shock:#FF7957; --grow:#3CC79E; --cash:#8B9AFF; --warn:#F0B53A; --on-accent:#06120D; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-.bar .track,.bar .fill{display:block}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 48px}
-.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
-header{display:flex;flex-direction:column;gap:10px;max-width:68ch}
-.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{font-family:var(--f-display);font-weight:600;font-size:clamp(28px,4.4vw,44px);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.01em}
-.lede{color:var(--muted);margin:0;font-size:16px}
-.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;display:grid;grid-template-columns:minmax(0,1fr) 330px;overflow:hidden}
-.stagebar{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.wrap{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+[data-lit]{transition:opacity .35s}
+.touring [data-lit]:not(.lit){opacity:.32}
+
+/* header */
+header{display:flex;flex-direction:column;gap:14px;max-width:1000px}
+.brand{font:700 18px var(--f-display);letter-spacing:-.02em}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(27px,3.9vw,42px);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.02em}
+h1 .rest{color:var(--muted);font-weight:500}
+.lede{display:flex;flex-direction:column;gap:10px;max-width:66ch}
+.lede p{margin:0;color:var(--muted);font-size:16.5px;text-wrap:pretty}
+.lede b{color:var(--ink);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:6px}
+.primary{font:600 15px var(--f-body);color:var(--on-accent);background:var(--grow);border:none;border-radius:10px;padding:12px 20px;cursor:pointer;
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--grow) 45%,transparent)}
+.cta .primary{font-size:16px;padding:14px 24px;animation:pulse 2.4s ease-out infinite}
+.primary:hover{filter:brightness(1.07)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--grow) 45%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--grow) 0%,transparent)}}
+@media (prefers-reduced-motion:reduce){.cta .primary{animation:none}}
+.cta .note{font-size:13.5px;color:var(--muted)}
+
+/* stage */
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;display:grid;
+  grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto auto 1fr;overflow:clip;scroll-margin-top:12px}
+.stagebar{grid-column:1/-1;grid-row:1;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.canvasbox{grid-column:1;grid-row:2/4;position:relative;min-width:0;border-right:1px solid var(--line)}
+.canvasinner{position:sticky;top:0}
+.coach{grid-column:2;grid-row:2}
+.panel{grid-column:2;grid-row:3}
 .steps{display:flex;gap:4px;flex-wrap:wrap}
-.steps button,.seg button{font:500 13px var(--f-body);color:var(--muted);background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 11px;cursor:pointer}
+.steps button,.seg button{font:500 13.5px var(--f-body);color:var(--muted);background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 11px;cursor:pointer}
 .steps button .n{font-family:var(--f-mono);font-size:11px;margin-right:6px;opacity:.7}
 .steps button[aria-selected="true"]{color:var(--ink);border-color:var(--line);background:var(--bg)}
 .steps button:hover,.seg button:hover{color:var(--ink)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--cash);outline-offset:2px}
 .seg{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px}
 .seg .lbl{font:12px var(--f-mono);color:var(--muted);padding:0 8px}
-.seg button{padding:4px 9px;font-size:12px}
+.seg button{padding:4px 9px;font-size:12.5px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-.canvasbox{position:relative;min-width:0;border-right:1px solid var(--line)}
-#map{display:block;width:100%;height:460px;touch-action:manipulation;cursor:pointer}
-.hint{position:absolute;left:14px;bottom:10px;font:12px var(--f-mono);color:var(--muted);pointer-events:none}
+#map{display:block;width:100%;height:540px;touch-action:manipulation;cursor:pointer}
+.hint{font:12px var(--f-mono);color:var(--muted);padding:0 14px 12px;min-height:30px}
+
+/* coach (walkthrough card) */
+.coach{padding:18px 20px 18px;display:flex;flex-direction:column;gap:12px;background:var(--tint);border-bottom:1px solid var(--line);min-width:0}
+.coachtop{display:flex;align-items:center;gap:10px}
+.prog{font:12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dots{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.dots button{width:8px;height:8px;border-radius:50%;border:none;padding:0;background:var(--line);cursor:pointer}
+.dots button[aria-current="step"]{background:var(--grow);width:20px;border-radius:4px}
+.dots button.done{background:color-mix(in srgb,var(--grow) 45%,var(--line))}
+.x{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer;flex:none}
+.x:hover{border-color:var(--muted)}
+.coach h2{font-family:var(--f-display);font-weight:600;font-size:21px;line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.cbody{display:flex;flex-direction:column;gap:10px;font-size:14.5px;color:var(--muted)}
+.cbody p{margin:0}
+.cbody b{color:var(--ink);font-weight:600}
+.cbody .c-cash{color:var(--cash)}
+.cbody ol,.cbody ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:6px}
+.layers{list-style:none;padding:0!important;gap:4px!important}
+.layers li{padding:7px 10px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:background .25s,border-color .25s}
+.layers li b{display:block;font-size:14px}
+.layers li.on{background:var(--surface);border-color:var(--line)}
+.rings{list-style:none;padding:0!important;gap:5px!important}
+.rings li{display:grid;grid-template-columns:4.6em 1fr;gap:8px;opacity:.35;transition:opacity .35s}
+.rings li.on{opacity:1}
+.rings .rk{font:12px var(--f-mono);color:var(--shock);padding-top:2px}
+.rings li.on span:last-child{color:var(--ink)}
+.cnav{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:4px}
+.ghost{font:500 14px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer}
+.ghost:disabled{opacity:.4;cursor:default}
+.link{align-self:flex-start;font:500 13.5px var(--f-body);color:var(--ink);background:none;border:none;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+/* panel (live widgets) */
 .panel{padding:20px 20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pp{display:flex;flex-direction:column;gap:12px}
 .panel h2{font-family:var(--f-display);font-weight:600;font-size:20px;line-height:1.2;margin:0;text-wrap:balance}
 .panel p{margin:0;color:var(--muted);font-size:14px}
 .panel p b{color:var(--ink);font-weight:600}
+.touring .ex{display:none}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:2px}
-.stat .v{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat .v{font:600 24px var(--f-display);font-variant-numeric:tabular-nums;color:var(--ink)}
 .stat .k{font-size:12px;color:var(--muted);line-height:1.3}
 .stat.hot .v{color:var(--shock)}
-.tag{display:inline-block;font:500 12px var(--f-mono);color:var(--shock);border:1px solid currentColor;border-radius:6px;padding:2px 7px}
+.tag{display:inline-block;font:12px var(--f-mono);color:var(--shock);border:1px solid currentColor;border-radius:6px;padding:2px 7px}
 .yearrow{display:flex;align-items:center;gap:10px}
-.yearrow output{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums;min-width:4ch}
+.yearrow output{font:600 24px var(--f-display);font-variant-numeric:tabular-nums;min-width:4ch}
 .yearrow input{flex:1;min-width:0;accent-color:var(--grow)}
-.play{font:500 12px var(--f-mono);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
+.play{font:12px var(--f-mono);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
 #chart{width:100%;height:150px;display:block}
 .events{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .events li{display:grid;grid-template-columns:3.4em 1fr;gap:8px;color:var(--muted);opacity:.4;transition:opacity .4s}
@@ -61,6 +130,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--cash);outline-o
 .events li.warn .t{color:var(--warn)}
 .bars{display:flex;flex-direction:column;gap:5px}
 .bar{display:grid;grid-template-columns:9.5em 1fr 3em;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.bar .track,.bar .fill{display:block}
 .bar .track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
 .bar .fill{height:100%;background:var(--cash);border-radius:3px;transition:width .3s}
 .bar .pc{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
@@ -71,75 +141,109 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--cash);outline-o
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.panel button.link{align-self:flex-start;font:500 13px var(--f-body);color:var(--ink);background:none;border:none;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 footer{font-size:12.5px;color:var(--muted);max-width:75ch}
-@media (max-width:820px){
-  .stage{grid-template-columns:1fr}
+
+@media (max-width:860px){
+  .stage{grid-template-columns:1fr;grid-template-rows:none}
+  .stagebar,.coach,.canvasbox,.panel{grid-column:1;grid-row:auto}
   .canvasbox{border-right:none;border-bottom:1px solid var(--line)}
-  #map{height:540px}
+  .canvasinner{position:static}
+  .coach{border-bottom:1px solid var(--line)}
+  #map{height:560px}
+  /* walkthrough on phones: the card becomes a bottom sheet so the map stays in view */
+  .coach{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:10;max-height:46vh;
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);padding:14px 16px;gap:10px}
+  .coach h2{font-size:18px}
+  .cbody{overflow:auto;min-height:0;flex:1 1 auto;font-size:14px}
+  .cnav{margin-top:0}
+  .cnav button{padding:9px 14px}
+  body.touring{padding-bottom:48vh}
+  .touring #map{height:max(400px,50vh)}
 }
 </style>
-
+</head>
+<body>
 <div class="wrap">
-  <header>
-    <div class="eyebrow">truffle · interactive demo</div>
-    <h1>Decisions sit inside systems</h1>
-    <p class="lede">Spreadsheets look at one company at a time, mostly at its past. We model the system around it: who depends on whom, when a technology gets cheap, and how people react. The example below is climate tech. Switch the labels to <i>Any sector</i> and picture your own world.</p>
+  <header data-lit="head">
+    <div class="brand">truffle</div>
+    <h1>We model the world as it is <span class="rest">— integrating complex systems such as markets, science, geopolitics, and more.</span></h1>
+    <div class="lede">
+      <p>Most big money decisions, from which startup to back to which risk to hedge, still run on <b>spreadsheets, a few headline numbers and gut feeling</b>. That squeezes a rich, connected world into a handful of metrics. It looks at one company at a time, mostly at its past, and misses the knock-on effects that often decide the outcome.</p>
+      <p>We combine models with live data to see the whole system: what depends on what, what happens when something breaks, and what would have happened otherwise. <b>Less guesswork, more evidence</b>, with simulations and what-ifs you can test before you commit.</p>
+    </div>
+    <div class="cta">
+      <button class="primary" id="startTour">Start walkthrough →</button>
+      <span class="note">9 short steps. Or explore the map on your own below.</span>
+    </div>
   </header>
 
-  <section class="stage" aria-label="System map demo">
+  <section class="stage" id="stage" aria-label="System map demo">
     <div class="stagebar">
-      <div class="steps" role="tablist" aria-label="Demo steps">
+      <div class="steps" role="tablist" aria-label="Demo steps" data-lit="tabs">
         <button role="tab" id="t0" aria-selected="true" data-step="0"><span class="n">1</span>Map</button>
         <button role="tab" id="t1" aria-selected="false" data-step="1"><span class="n">2</span>Shock</button>
         <button role="tab" id="t2" aria-selected="false" data-step="2"><span class="n">3</span>Time</button>
         <button role="tab" id="t3" aria-selected="false" data-step="3"><span class="n">4</span>Your world</button>
       </div>
-      <div class="seg" role="group" aria-label="Labels">
+      <div class="seg" role="group" aria-label="Labels" data-lit="labels">
         <span class="lbl">Labels</span>
         <button id="lblClimate" aria-pressed="true">Climate tech</button>
         <button id="lblAny" aria-pressed="false">Any sector</button>
       </div>
     </div>
 
-    <div class="canvasbox">
-      <canvas id="map" aria-label="Network of research, inputs, technologies, companies, capital and prices"></canvas>
-      <div class="hint" id="hint">Tap a node</div>
+    <div class="coach" id="coach" hidden aria-live="polite">
+      <div class="coachtop">
+        <span class="prog" id="prog">1 / 9</span>
+        <span class="dots" id="dots"></span>
+        <button class="x" id="tourX" aria-label="End walkthrough" title="End walkthrough">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <h2 id="cTitle"></h2>
+      <div class="cbody" id="cBody"></div>
+      <div class="cnav">
+        <button class="ghost" id="tourBack">← Back</button>
+        <button class="primary" id="tourNext">Next →</button>
+      </div>
     </div>
 
-    <div class="panel">
-      <div data-panel="0">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <h2>One map of who depends on whom</h2>
-          <p>We read papers, patents, prices, filings and company registries every day and turn them into one connected map. <b>Tap or hover a node</b> to see what it depends on and what depends on it.</p>
-          <div class="legend">
-            <span><i class="dot" style="background:var(--muted)"></i>materials, products</span>
-            <span><i class="dot" style="background:var(--cash)"></i>money</span>
-          </div>
-          <p id="focusText">Moving dots are flows between players.</p>
-          <button class="link" data-go="1">Next: push one node →</button>
+    <div class="canvasbox">
+      <div class="canvasinner">
+        <canvas id="map" aria-label="Network of research, inputs, technologies, companies, capital and prices"></canvas>
+        <div class="hint" id="hint">Tap or hover a node</div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="pp" data-panel="0">
+        <h2 class="ex">One map of who depends on whom</h2>
+        <p class="ex">We read papers, patents, prices, filings and company registries every day and turn them into one connected map. <b>Tap or hover a node</b> to see what it depends on and what depends on it.</p>
+        <div class="legend" data-w="legend">
+          <span><i class="dot" style="background:var(--muted)"></i>materials, products</span>
+          <span><i class="dot" style="background:var(--cash)"></i>money</span>
         </div>
+        <p id="focusText" data-w="focus">Moving dots are flows between players.</p>
+        <button class="link ex" data-go="1">Next: push one node →</button>
       </div>
 
-      <div data-panel="1" hidden>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <h2>Push one node and watch it spread</h2>
-          <div><span class="tag" id="shockName">Iridium supply −40%</span></div>
-          <div class="stats">
-            <div class="stat"><span class="v" id="sDirect">0</span><span class="k">hit directly</span></div>
-            <div class="stat"><span class="v" id="sLater">0</span><span class="k">hit in later rounds</span></div>
-            <div class="stat hot"><span class="v" id="sPct">0%</span><span class="k">of impact after round 1</span></div>
-          </div>
-          <p>A spreadsheet tracks the first ring. Most of the effect travels further, through loops like <b id="loop1">power price ↔ hydrogen</b> and <b id="loop2">startups ↔ their VC</b>.</p>
-          <p><b>Tap any node</b> to shock it instead.</p>
-          <button class="link" data-go="2">Next: run time forward →</button>
+      <div class="pp" data-panel="1" hidden>
+        <h2 class="ex">Push one node and watch it spread</h2>
+        <div data-w="shocktag"><span class="tag" id="shockName">Iridium supply −40%</span></div>
+        <div class="stats" data-w="stats">
+          <div class="stat" data-lit="sd"><span class="v" id="sDirect">0</span><span class="k">hit directly</span></div>
+          <div class="stat" data-lit="sl"><span class="v" id="sLater">0</span><span class="k">hit in later rounds</span></div>
+          <div class="stat hot" data-lit="pct"><span class="v" id="sPct">0%</span><span class="k">of impact after round 1</span></div>
         </div>
+        <p class="ex">A spreadsheet tracks the first ring. Most of the effect travels further, through loops like <b id="loop1">power price ↔ hydrogen</b> and <b id="loop2">startups ↔ their VC</b>.</p>
+        <p class="ex"><b>Tap any node</b> to shock it instead.</p>
+        <button class="link ex" data-go="2">Next: run time forward →</button>
       </div>
 
-      <div data-panel="2" hidden>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <h2>Run time forward</h2>
-          <p>Each technology gets cheaper on its own measured learning curve. When one crosses cost parity, suppliers, buyers and money move with it.</p>
+      <div class="pp" data-panel="2" hidden>
+        <h2 class="ex">Run time forward</h2>
+        <p class="ex">Each technology gets cheaper on its own measured learning curve. When one crosses cost parity, suppliers, buyers and money move with it.</p>
+        <div class="pp" data-w="time">
           <div class="yearrow">
             <output id="yearOut" for="year">2026</output>
             <input id="year" type="range" min="2026" max="2040" step="0.1" value="2026" aria-label="Year">
@@ -149,27 +253,27 @@ footer{font-size:12.5px;color:var(--muted);max-width:75ch}
           <ul class="events" id="events"></ul>
           <div class="small">Where VC money goes</div>
           <div class="bars" id="bars"></div>
-          <button class="link" data-go="3">Next: your world →</button>
         </div>
+        <button class="link ex" data-go="3">Next: your world →</button>
       </div>
 
-      <div data-panel="3" hidden>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <h2>Same maths, your nodes</h2>
-          <p>The labels are now generic. Read them as your portfolio, your suppliers, your grid or your research field. Shocks and the time slider both work here.</p>
-          <div class="yearrow">
-            <output id="yearOut2" for="year2">2026</output>
-            <input id="year2" type="range" min="2026" max="2040" step="0.1" value="2032" aria-label="Year">
-          </div>
-          <ol class="qs">
-            <li>Which node in your world would you push first?</li>
-            <li>Which dependency are you least sure about?</li>
-            <li>What would you want to know a year earlier?</li>
-          </ol>
+      <div class="pp" data-panel="3" hidden>
+        <h2 class="ex">Same maths, your nodes</h2>
+        <p class="ex">The labels are now generic. Read them as your portfolio, your suppliers, your grid or your research field. Shocks and the time slider both work here.</p>
+        <div class="yearrow" data-w="year2">
+          <output id="yearOut2" for="year2">2026</output>
+          <input id="year2" type="range" min="2026" max="2040" step="0.1" value="2032" aria-label="Year">
+        </div>
+        <ol class="qs" data-w="qs">
+          <li>Which node in your world would you push first?</li>
+          <li>Which dependency are you least sure about?</li>
+          <li>What would you want to know a year earlier?</li>
+        </ol>
+        <div class="pp" data-w="moat">
           <div class="small">Why this is hard to copy</div>
           <ul class="moat">
             <li><b>Several models on one map.</b> Networks show what's connected, learning curves show when things get cheap, agents show how people react, and LLM readers keep the data fresh.</li>
-            <li><b>Each one covers another's blind spot.</b> In step 3 the curve found the year, and the network found the bottleneck it creates.</li>
+            <li><b>Each one covers another's blind spot.</b> In the time step the curve found the year, and the network found the bottleneck it creates.</li>
             <li><b>Scored against reality.</b> Every forecast is checked against what actually happened.</li>
           </ul>
         </div>
@@ -177,12 +281,13 @@ footer{font-size:12.5px;color:var(--muted);max-width:75ch}
     </div>
   </section>
 
-  <footer>A toy model for illustration. The structure is how truffle's models work; the numbers are invented for the demo.</footer>
+  <footer data-lit="foot">A toy model for illustration. The structure is how truffle's models work; the numbers are invented for the demo.</footer>
 </div>
 
 <script>
 (function(){
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FM='"Fragment Mono", ui-monospace, monospace', FS='"Schibsted Grotesk", system-ui, sans-serif';
 const C=['Science & policy','Materials','Technologies','Companies','Capital & prices'];
 const A=['Drivers','Inputs','Capabilities','Players','Money & prices'];
 // id, column, climate label, generic label, shock phrase
@@ -221,7 +326,10 @@ const E=[
 ].map((e,k)=>({k,a:ix[e[0]],b:ix[e[1]],w:e[2],cash:['vc','pe','bank'].includes(e[0])}));
 
 let generic=false, step=0, focus=-1;
+let tour=-1, tourT0=0, colPin=-1, autoFocus=false, lastBand=-1;
 const L=n=>generic?n.a:n.c;
+const nm=id=>L(N[ix[id]]);
+const $=id=>document.getElementById(id);
 
 // ---- tech curves ----
 const T={pv:{c0:1.35,g:.09},lion:{c0:1.1,g:.07},ssb:{c0:2.6,g:.10},h2:{c0:2.2,g:.095}};
@@ -255,14 +363,17 @@ function propagate(s){
   const r1=R[1].reduce((a,b)=>a+b,0), rest=R.slice(2).reduce((a,r)=>a+r.reduce((x,y)=>x+y,0),0);
   return {s,R,hop,t0:performance.now(),direct:hop.filter(h=>h===1).length,later:hop.filter(h=>h>=2).length,pct:Math.round(100*rest/(r1+rest))};
 }
-const ROUND=RM?1:560;
+const ROUND_FAST=RM?1:560, ROUND_SLOW=RM?1:1050;
+let ROUND=ROUND_FAST;
+const shockLabel=n=>(!generic&&n.sh)?n.sh:L(n)+' shock';
 function shockAt(i){
   shock=propagate(i);
-  const n=N[i];
-  document.getElementById('shockName').textContent=(!generic&&n.sh)?n.sh:L(n)+' shock';
-  document.getElementById('sDirect').textContent=shock.direct;
-  document.getElementById('sLater').textContent=shock.later;
-  document.getElementById('sPct').textContent=shock.pct+'%';
+  $('shockName').textContent=shockLabel(N[i]);
+  $('sDirect').textContent=shock.direct;
+  $('sLater').textContent=shock.later;
+  $('sPct').textContent=shock.pct+'%';
+  if(tour===6) shock.t0=performance.now()-40*ROUND;
+  if(tour===5||tour===6) renderCoach();
 }
 function impactNow(i,now){
   if(!shock) return 0;
@@ -272,23 +383,25 @@ function impactNow(i,now){
 }
 
 // ---- canvas ----
-const cv=document.getElementById('map'), cx=cv.getContext('2d');
+const cv=$('map'), cx=cv.getContext('2d');
 let W=0,H=0,vertical=false,tok={};
 function readTok(){const cs=getComputedStyle(document.documentElement);['bg','surface','ink','muted','line','shock','grow','cash','warn'].forEach(k=>tok[k]=cs.getPropertyValue('--'+k).trim())}
+const crowded=c=>vertical&&N.filter(n=>n.col===c).length>4;
 function layout(){
   const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0);
   vertical=W<560;
   for(let c=0;c<5;c++){
     const col=N.filter(n=>n.col===c);
     col.forEach((n,j)=>{
-      if(!vertical){const px=70,top=58,bot=34;n.x=px+c*(W-2*px)/4;n.y=top+(j+.5)*(H-top-bot)/col.length;}
-      else{const top=44,bot=40,px=34;n.y=top+c*(H-top-bot)/4+8;n.x=px+(j+.5)*(W-2*px)/col.length;}
+      if(!vertical){const px=70,top=58,bot=30;n.x=px+c*(W-2*px)/4;n.y=top+(j+.5)*(H-top-bot)/col.length;}
+      else{const top=44,bot=56,px=34;n.y=top+c*(H-top-bot)/4+8;n.x=px+(j+.5)*(W-2*px)/col.length;
+        if(col.length>4&&j%2) n.y+=26;} // stagger crowded rows so labels don't collide
     });
   }
 }
 function ctrl(e){
   const a=N[e.a],b=N[e.b],mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
-  const back=vertical?(b.y<a.y-1):(b.x<a.x-1), same=a.col===b.col;
+  const back=vertical?(b.y<a.y-30):(b.x<a.x-1), same=a.col===b.col;
   let off=back?46:same?30:0; const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
   return [mx-dy/len*off,my+dx/len*off];
 }
@@ -309,32 +422,52 @@ function edgeRate(e){
   }
   return .16;
 }
+const FOCUS_CYCLE=['h2','vc','util','irid'];
+function bandNow(now){return colPin>=0?colPin:Math.floor(Math.max(0,now-tourT0)/1900)%5}
 function tick(now){
-  const dt=Math.min(.05,(now-last)/1000);last=now;
+  const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(step===2&&playing){year=Math.min(2040,year+dt*1.4);syncYear();if(year>=2040)setPlay(false)}
   if(!RM){E.forEach(e=>{if(Math.random()<edgeRate(e)*dt)parts.push({e,t:0,sp:.28+Math.random()*.18})});
     parts.forEach(p=>p.t+=p.sp*dt);parts=parts.filter(p=>p.t<1);}
+  // walkthrough live bits
+  if(tour===2){const b=bandNow(now);if(b!==lastBand){lastBand=b;document.querySelectorAll('.layers li').forEach(li=>li.classList.toggle('on',+li.dataset.col===b))}}
+  if(tour===4&&autoFocus){const f=ix[FOCUS_CYCLE[Math.floor(Math.max(0,now-tourT0)/2600)%FOCUS_CYCLE.length]];if(f!==focus){focus=f;focusInfo()}}
+  if(tour===5&&shock){const el=(now-shock.t0)/ROUND;document.querySelectorAll('.rings li').forEach(li=>li.classList.toggle('on',el>=+li.dataset.k))}
   draw(now);requestAnimationFrame(tick);
 }
 function related(i){const s=new Set([i]);E.forEach(e=>{if(e.a===i)s.add(e.b);if(e.b===i)s.add(e.a)});return s}
+const SPOT_BET=new Set(['bst','ssb','sci_ss','lith','vc','ev'].map(id=>ix[id]));
 
 function draw(now){
   readTok();
   cx.clearRect(0,0,W,H);
-  const intro=RM?1:Math.min(1,(now-born)/1100);
+  const intro=RM?1:Math.min(1,Math.max(0,now-born)/1100);
   const rel=focus>=0&&step===0?related(focus):null;
+  let spot=null, band=-1;
+  if(tour===2){band=bandNow(now);spot=new Set(N.filter(n=>n.col===band).map(n=>n.i))}
+  if(tour===3) spot=SPOT_BET;
+  // layer band
+  if(band>=0){
+    const col=N.filter(n=>n.col===band);cx.fillStyle=alpha(tok.grow,.09);cx.beginPath();
+    if(!vertical){const half=(W-140)/8;cx.roundRect(col[0].x-half+4,8,2*half-8,H-16,10)}
+    else{const ys=col.map(n=>n.y);cx.roundRect(6,Math.min(...ys)-34,W-12,Math.max(...ys)-Math.min(...ys)+70,10)}
+    cx.fill();
+  }
   // column headers
-  cx.font='500 10.5px "JetBrains Mono", ui-monospace, monospace';cx.fillStyle=tok.muted;
+  cx.font='10.5px '+FM;
   const hd=generic?A:C;
   for(let c=0;c<5;c++){const n=N.find(q=>q.col===c);
-    if(!vertical){cx.textAlign='center';cx.fillText(hd[c].toUpperCase(),n.x,24)}
+    cx.fillStyle=band<0?tok.muted:c===band?tok.ink:alpha(tok.muted,.45);
+    if(!vertical){cx.textAlign='center';cx.fillText(hd[c].toUpperCase(),n.x,26)}
     else{cx.textAlign='left';cx.fillText(hd[c].toUpperCase(),12,n.y-22)}}
   const showYear=step===2||step===3;
+  const inSpot=i=>!spot||spot.has(i);
   // edges
   E.forEach(e=>{
     const a=N[e.a],b=N[e.b],[qx,qy]=ctrl(e);
     let al=.22,lw=1,col=e.cash?tok.cash:tok.muted;
     if(rel){const on=(e.a===focus||e.b===focus);al=on?.75:.06;lw=on?1.6:1}
+    if(spot){const both=spot.has(e.a)&&spot.has(e.b),one=spot.has(e.a)||spot.has(e.b);al=both?.75:(one&&band>=0)?.22:.05;lw=both?1.6:1}
     if(shock&&(step===1||step===3)){const ia=impactNow(e.a,now),ib=impactNow(e.b,now);if(ia>.05&&ib>.05){al=.25+.5*Math.min(ia,ib);col=tok.shock}}
     if(showYear&&N[e.a].id==='irid'&&N[e.b].id==='h2'){const st=v('h2',year);if(st>.3){col=tok.warn;al=.3+.6*st;lw=1+2*st}}
     cx.strokeStyle=alpha(col,al*intro);cx.lineWidth=lw;cx.beginPath();cx.moveTo(a.x,a.y);cx.quadraticCurveTo(qx,qy,b.x,b.y);cx.stroke();
@@ -342,6 +475,7 @@ function draw(now){
   // particles
   parts.forEach(p=>{const [x,y]=bez(p.e,p.t);const e=p.e;let col=e.cash?tok.cash:tok.muted,al=.7;
     if(rel&&!(e.a===focus||e.b===focus))al=.08;
+    if(spot&&!(spot.has(e.a)&&spot.has(e.b)))al=.08;
     cx.fillStyle=alpha(col,al*Math.sin(Math.PI*p.t)*intro);cx.beginPath();cx.arc(x,y,1.8,0,7);cx.fill()});
   // shock pulses
   if(shock&&(step===1||step===3)&&!RM){
@@ -355,40 +489,51 @@ function draw(now){
     const ap=Math.max(0,Math.min(1,intro*1.6-n.col*.15));
     let r=n.col===2?8:6.5, fill=tok.surface, stroke=tok.ink, la=1;
     if(rel&&!rel.has(n.i)){stroke=alpha(tok.muted,.5);la=.35}
+    if(!inSpot(n.i)){stroke=alpha(tok.muted,.45);la=.3}
     const imp=(step===1||step===3)?impactNow(n.i,now):0;
     if(imp>.02){cx.fillStyle=alpha(tok.shock,.16*imp);cx.beginPath();cx.arc(n.x,n.y,r+5+12*imp,0,7);cx.fill();fill=alpha(tok.shock,.35+.65*imp);stroke=tok.shock}
     if(shock&&n.i===shock.s&&(step===1||step===3)){fill=tok.shock;stroke=tok.shock}
     if(showYear&&T[n.id]&&imp<.02){const q=v(n.id,year);fill=q>.02?alpha(tok.grow,.15+.85*q):fill;stroke=q>.5?tok.grow:stroke;r+=3*q}
     if(showYear&&n.id==='irid'){const st=v('h2',year);if(st>.3){const pl=RM?0:.5+.5*Math.sin(now/260);cx.strokeStyle=alpha(tok.warn,.35+.4*pl*st);cx.lineWidth=2;cx.beginPath();cx.arc(n.x,n.y,r+6+3*pl,0,7);cx.stroke();stroke=tok.warn}}
+    // walkthrough: what a first-ring model never sees
+    if(tour===6&&shock&&shock.hop[n.i]>=2){cx.strokeStyle=tok.ink;cx.lineWidth=1.3;cx.setLineDash([3,3]);cx.beginPath();cx.arc(n.x,n.y,r+8,0,7);cx.stroke();cx.setLineDash([])}
     cx.globalAlpha=ap;
     cx.fillStyle=fill;cx.strokeStyle=stroke;cx.lineWidth=1.5;cx.beginPath();cx.arc(n.x,n.y,r*(.6+.4*ap),0,7);cx.fill();cx.stroke();
-    cx.font=(vertical?'10px':'11.5px')+' Inter, system-ui, sans-serif';cx.textAlign='center';
-    cx.fillStyle=alpha((imp>.05||n.i===focus)?tok.ink:tok.muted,la);
-    const maxw=vertical?(W-68)/N.filter(q=>q.col===n.col).length-4:Math.min(130,(W-140)/4-8);
-    wrap(L(n),maxw).forEach((ln,j)=>cx.fillText(ln,n.x,n.y+r+13+j*(vertical?11:13)));
+    cx.font=(vertical?'10.5px ':'12px ')+FS;cx.textAlign='center';
+    cx.fillStyle=alpha((imp>.05||n.i===focus||(spot&&spot.has(n.i)))?tok.ink:tok.muted,la);
+    const per=N.filter(q=>q.col===n.col).length;
+    const maxw=vertical?(crowded(n.col)?2*(W-68)/per-16:(W-68)/per-4):Math.min(130,(W-140)/4-8);
+    wrap(L(n),maxw).forEach((ln,j)=>cx.fillText(ln,n.x,n.y+r+13+j*(vertical?11.5:13.5)));
     cx.globalAlpha=1;
   });
 }
 
 // ---- interaction ----
 function hit(ev){const r=cv.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top;let best=-1,bd=26;N.forEach(n=>{const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=n.i}});return best}
-cv.addEventListener('pointermove',ev=>{if(step!==0||ev.pointerType!=='mouse')return;const h=hit(ev);if(h!==focus){focus=h;focusInfo()}});
-cv.addEventListener('pointerleave',()=>{if(step===0){focus=-1;focusInfo()}});
+cv.addEventListener('pointermove',ev=>{
+  if(step!==0||ev.pointerType!=='mouse'||tour===2||tour===3)return;
+  const h=hit(ev);
+  if(tour===4){if(h<0)return;autoFocus=false}
+  if(h!==focus){focus=h;focusInfo()}
+});
+cv.addEventListener('pointerleave',()=>{if(step===0&&tour!==4&&tour!==2&&tour!==3){focus=-1;focusInfo()}});
 cv.addEventListener('pointerdown',ev=>{const h=hit(ev);if(h<0)return;
-  if(step===0){focus=h;focusInfo()} else if(step===1||step===3){shockAt(h)} else if(step===2){setStep(1);shockAt(h)}});
-function focusInfo(){const el=document.getElementById('focusText');if(focus<0){el.textContent='Moving dots are flows between players.';return}
+  if(tour===2){colPin=colPin===N[h].col?-1:N[h].col;tourT0=performance.now()-1900*N[h].col;lastBand=-1;return}
+  if(tour===3)return;
+  if(tour===4)autoFocus=false;
+  if(step===0){focus=h;focusInfo()} else if(step===1||step===3){shockAt(h)} else if(step===2&&tour<0){setStep(1);shockAt(h)}});
+function focusInfo(){const el=$('focusText');if(focus<0){el.textContent='Moving dots are flows between players.';return}
   const n=N[focus],up=E.filter(e=>e.b===focus).map(e=>L(N[e.a])),dn=E.filter(e=>e.a===focus).map(e=>L(N[e.b]));
   el.innerHTML='<b>'+L(n)+'</b> depends on '+(up.length?up.join(', '):'nothing upstream')+'. It feeds '+(dn.length?dn.join(', '):'nothing downstream')+'.'}
 
 // ---- time panel ----
-const yr=document.getElementById('year'),yo=document.getElementById('yearOut'),yr2=document.getElementById('year2'),yo2=document.getElementById('yearOut2');
+const yr=$('year'),yo=$('yearOut'),yr2=$('year2'),yo2=$('yearOut2');
 let playing=false;
-const playBtn=document.getElementById('play');
+const playBtn=$('play');
 function setPlay(p){playing=p;playBtn.textContent=p?'Pause':'Play'}
 playBtn.onclick=()=>{if(!playing&&year>=2039.9)year=2026;setPlay(!playing)};
 yr.oninput=()=>{year=+yr.value;setPlay(false);syncYear()};
 yr2.oninput=()=>{year=+yr2.value;syncYear()};
-const nm=id=>L(N[ix[id]]);
 function events(){
   const f=y=>Math.floor(y);
   return [
@@ -400,21 +545,21 @@ function events(){
     [X.ssb,nm('ssb')+' reaches parity']
   ].sort((a,b)=>a[0]-b[0]);
 }
-function renderEvents(){const ul=document.getElementById('events');ul.innerHTML='';events().forEach(([y,t,c])=>{const li=document.createElement('li');li.dataset.y=y;if(c)li.className=c;li.innerHTML='<span class="y">'+Math.floor(y)+'</span><span class="t"></span>';li.querySelector('.t').textContent=t;ul.appendChild(li)});syncYear()}
+function renderEvents(){const ul=$('events');ul.innerHTML='';events().forEach(([y,t,c])=>{const li=document.createElement('li');li.dataset.y=y;if(c)li.className=c;li.innerHTML='<span class="y">'+Math.floor(y)+'</span><span class="t"></span>';li.querySelector('.t').textContent=t;ul.appendChild(li)});syncYear()}
 function syncYear(){
   yr.value=year;yr2.value=year;yo.textContent=Math.floor(year);yo2.textContent=Math.floor(year);
   document.querySelectorAll('#events li').forEach(li=>li.classList.toggle('on',year>=+li.dataset.y));
-  const b=document.getElementById('bars');const sh=shares(year);
+  const b=$('bars');const sh=shares(year);
   if(!b.children.length||b.dataset.g!==String(generic)){b.dataset.g=generic;b.innerHTML='';sh.forEach(s=>{const d=document.createElement('div');d.className='bar';d.innerHTML='<span></span><span class="track"><span class="fill"></span></span><span class="pc"></span>';d.firstChild.textContent=nm(s.id);b.appendChild(d)})}
   sh.forEach((s,j)=>{const d=b.children[j];d.querySelector('.fill').style.width=(100*s.s).toFixed(0)+'%';d.querySelector('.pc').textContent=(100*s.s).toFixed(0)+'%'});
   drawChart();
 }
-const ch=document.getElementById('chart'),cc=ch.getContext('2d');
+const ch=$('chart'),cc=ch.getContext('2d');
 function drawChart(){
   readTok();const r=ch.getBoundingClientRect();if(!r.width)return;const d=devicePixelRatio||1;ch.width=r.width*d;ch.height=r.height*d;cc.setTransform(d,0,0,d,0,0);
-  const w=r.width,h=r.height,l=30,rt=10,t=8,b=20;
+  const w=r.width,h=r.height,l=44,rt=10,t=8,b=20;
   const xs=y=>l+(y-2026)/14*(w-l-rt),ys=c=>t+(Math.log(3)-Math.log(c))/(Math.log(3)-Math.log(.4))*(h-t-b);
-  cc.clearRect(0,0,w,h);cc.font='10px "JetBrains Mono", monospace';cc.fillStyle=tok.muted;cc.strokeStyle=tok.line;cc.lineWidth=1;
+  cc.clearRect(0,0,w,h);cc.font='10px '+FM;cc.fillStyle=tok.muted;cc.strokeStyle=tok.line;cc.lineWidth=1;
   [.5,1,2].forEach(c=>{cc.beginPath();cc.moveTo(l,ys(c));cc.lineTo(w-rt,ys(c));cc.setLineDash(c===1?[4,3]:[]);cc.strokeStyle=c===1?tok.muted:tok.line;cc.stroke();cc.setLineDash([]);cc.textAlign='right';cc.fillText(c===1?'parity':c+'×',l-4,ys(c)+3)});
   cc.textAlign='center';[2026,2030,2035,2040].forEach(y=>cc.fillText(y,xs(y),h-5));
   Object.keys(T).forEach(k=>{
@@ -424,14 +569,12 @@ function drawChart(){
     pts.forEach(([y,c],j)=>{const s=.07*Math.sqrt(y-2026+.01);const yy=ys(Math.min(3,c*Math.exp(s)));j?cc.lineTo(xs(y),yy):cc.moveTo(xs(y),yy)});
     pts.slice().reverse().forEach(([y,c])=>{const s=.07*Math.sqrt(y-2026+.01);cc.lineTo(xs(y),ys(Math.max(.4,c*Math.exp(-s))))});cc.fill();
     cc.strokeStyle=crossed?tok.grow:tok.ink;cc.lineWidth=1.4;cc.beginPath();pts.forEach(([y,c],j)=>{const yy=ys(Math.min(3,c));j?cc.lineTo(xs(y),yy):cc.moveTo(xs(y),yy)});cc.stroke();
-    const sy=ys(Math.min(2.9,cost(k,2026)));cc.fillStyle=tok.muted;cc.textAlign='left';
   });
-  if(true){cc.strokeStyle=alpha(tok.ink,.5);cc.lineWidth=1;cc.beginPath();cc.moveTo(xs(year),t);cc.lineTo(xs(year),h-b);cc.stroke();}
-  // label curves at the year cursor
-  cc.font='9.5px Inter, sans-serif';cc.textAlign='left';
+  cc.strokeStyle=alpha(tok.ink,.5);cc.lineWidth=1;cc.beginPath();cc.moveTo(xs(year),t);cc.lineTo(xs(year),h-b);cc.stroke();
+  cc.font='10px '+FS;cc.textAlign='left';
   const lab=Object.keys(T).map(k=>({k,y:ys(Math.max(.42,Math.min(2.9,cost(k,Math.max(2026.5,Math.min(2037,year))))))})).sort((a,b)=>a.y-b.y);
   for(let j=1;j<lab.length;j++)if(lab[j].y-lab[j-1].y<11)lab[j].y=lab[j-1].y+11;
-  lab.forEach(o=>{cc.fillStyle=year>=X[o.k]?tok.grow:tok.ink;const x=xs(Math.max(2026.5,Math.min(2037,year)))+5;cc.fillText(nm(o.k),Math.min(x,w-rt-70),o.y-3)});
+  lab.forEach(o=>{cc.fillStyle=year>=X[o.k]?tok.grow:tok.ink;const x=xs(Math.max(2026.5,Math.min(2037,year)))+5;cc.fillText(nm(o.k),Math.min(x,w-rt-74),o.y-3)});
 }
 
 // ---- steps & labels ----
@@ -439,7 +582,7 @@ const tabs=[...document.querySelectorAll('.steps button')],panels=[...document.q
 const hints=['Tap or hover a node','Tap any node to shock it','Drag the year, or press Play','Tap a node, drag the year'];
 function setStep(s){
   step=s;tabs.forEach((b,j)=>b.setAttribute('aria-selected',j===s));panels.forEach((p,j)=>p.hidden=j!==s);
-  document.getElementById('hint').textContent=hints[s];focus=-1;focusInfo();
+  $('hint').textContent=hints[s];focus=-1;focusInfo();
   if(s===1&&(!shock))shockAt(ix.irid);
   if(s===1&&shock)shock.t0=performance.now();
   if(s===2){year=2026;syncYear();if(!RM)setPlay(true);else{year=2034;syncYear()}}
@@ -447,18 +590,133 @@ function setStep(s){
   if(s===3){setGeneric(true);if(year<2031){year=2032;syncYear()}if(!shock)shockAt(ix.irid);}
   requestAnimationFrame(drawChart);
 }
-tabs.forEach(b=>b.onclick=()=>setStep(+b.dataset.step));
+tabs.forEach(b=>b.onclick=()=>{if(tour>=0)endTour();setStep(+b.dataset.step)});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>setStep(+b.dataset.go));
-tabs.forEach((b,j)=>b.addEventListener('keydown',ev=>{if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){const n=(j+(ev.key==='ArrowRight'?1:3))%4;tabs[n].focus();setStep(n)}}));
-function setGeneric(g){generic=g;document.getElementById('lblClimate').setAttribute('aria-pressed',!g);document.getElementById('lblAny').setAttribute('aria-pressed',g);
-  document.getElementById('loop1').textContent=nm('power')+' ↔ '+nm('h2');document.getElementById('loop2').textContent=generic?'startups ↔ their fund':'startups ↔ their VC';
-  if(shock)shockAt(shock.s);renderEvents();focusInfo()}
-document.getElementById('lblClimate').onclick=()=>setGeneric(false);
-document.getElementById('lblAny').onclick=()=>setGeneric(true);
+tabs.forEach((b,j)=>b.addEventListener('keydown',ev=>{if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){const n=(j+(ev.key==='ArrowRight'?1:3))%4;tabs[n].focus();if(tour>=0)endTour();setStep(n)}}));
+function setGeneric(g){generic=g;$('lblClimate').setAttribute('aria-pressed',!g);$('lblAny').setAttribute('aria-pressed',g);
+  $('loop1').textContent=nm('power')+' ↔ '+nm('h2');$('loop2').textContent=generic?'startups ↔ their fund':'startups ↔ their VC';
+  if(shock&&tour!==6)shockAt(shock.s);else if(shock)$('shockName').textContent=shockLabel(N[shock.s]);
+  renderEvents();focusInfo();if(tour>=0)renderCoach()}
+$('lblClimate').onclick=()=>setGeneric(false);
+$('lblAny').onclick=()=>setGeneric(true);
 
-addEventListener('resize',()=>{layout();drawChart()});
+// ---- walkthrough ----
+const rings=()=>{
+  if(!shock)return '';
+  const max=Math.max(...shock.hop);let out='<li data-k="0"><span class="rk">start</span><span>'+shockLabel(N[shock.s])+'</span></li>';
+  for(let k=1;k<=max;k++){const ns=N.filter(n=>shock.hop[n.i]===k).map(L);if(ns.length)out+='<li data-k="'+k+'"><span class="rk">ring '+k+'</span><span>'+ns.join(', ')+'</span></li>'}
+  return out;
+};
+const TOUR=[
+ {demo:0,w:[],lit:['labels'],hint:'',
+  title:'Let\'s take one sector: climate tech',
+  body:()=>`<p>We'll walk through one real kind of market: the energy transition. Its research, raw materials, technologies, companies and the money behind them.</p>
+   <p>Nothing here is specific to climate. At the end we switch the labels, and the same map can stand for <b>any sector</b>.</p>`},
+ {demo:0,w:[],hint:'Moving dots are flows between players',
+  title:'This is a map of who depends on whom',
+  body:()=>`<p>Each dot is something that shapes the outcome: a research field, a raw material, a technology, a company, a fund or a price. A line means one depends on the other.</p>
+   <p>The moving dots are what flows along the lines: materials and products in grey, <b class="c-cash">money in blue</b>.</p>
+   <p>In the product, this map is built from papers, patents, prices, filings and company registries, and refreshed every day.</p>`},
+ {demo:0,w:[],hint:'Hover a layer, or tap a dot to hold its layer',
+  title:'Five layers, from science to money',
+  body:()=>{const h=generic?A:C;const d=['Research and regulation decide what becomes possible.','The raw inputs everything is made from.','What gets built from them, each getting cheaper at its own pace.','The makers and startups, and the customers who buy from them.','The funds and lenders that pay for it all, and the market prices that feed back into everything.'];
+   return `<ul class="layers">${h.map((t,c)=>`<li data-col="${c}"><b>${t}</b>${d[c]}</li>`).join('')}</ul>`}},
+ {demo:0,w:[],hint:'',
+  title:'What this means for an investment',
+  body:()=>`<p>Say you're weighing an investment in the <b>${nm('bst')}</b>. Its pitch deck shows one company.</p>
+   <p>The map shows what the bet really rests on: the price of ${nm('lith')}, progress in ${nm('sci_ss')}, whether the ${nm('ev')} keeps buying, and whether the ${nm('vc')} can fund the next round.</p>
+   <p>Risk and upside travel along these lines, usually long before they show up in the company's own numbers.</p>`},
+ {demo:0,w:['focus'],hint:'Hover or tap a dot',
+  title:'Nothing moves on its own',
+  body:()=>`<p><b>Hover or tap any dot</b> to light up what it depends on and what depends on it.</p>
+   <p>${nm('h2')}, for example, needs catalyst research, iridium, a carbon price and cheap power. The power price in turn depends on how fast solar gets cheaper. From inside one company, most of these links are invisible.</p>`},
+ {demo:1,w:['stats'],lit:['sd','sl','pct'],hint:'Tap any dot to shock it instead',
+  title:'Push one dot: a shock, ring by ring',
+  enter:()=>{shockAt(ix.irid)},
+  body:()=>`<p>Watch the shock travel outward from where it starts:</p><ol class="rings">${rings()}</ol>
+   <p>Each ring is weaker, but holds more players, and loops send part of the shock back around. <b>Tap any dot</b> to start a different shock.</p>
+   <button class="link" id="replay">Replay</button>`},
+ {demo:1,w:['stats'],lit:['sl','pct'],hint:'Dashed: hit after the first ring',
+  title:'What a standard model misses',
+  enter:()=>{if(!shock)shockAt(ix.irid);shock.t0=performance.now()-40*ROUND},
+  body:()=>shock?`<p>A typical analysis follows the first ring: who is hit directly. Here that's ${shock.direct} ${shock.direct===1?'player':'players'}.</p>
+   <p>The other ${shock.later} (dashed) are hit later, and they carry <b>${shock.pct}% of the total impact</b>. A spreadsheet also misses:</p>
+   <ul><li><b>Loops.</b> A fund is hit through its startups, pulls back, and hits them again.</li>
+   <li><b>Time.</b> Costs keep moving while the shock plays out.</li>
+   <li><b>Reactions.</b> Funds follow each other, lenders tighten.</li></ul>`:''},
+ {demo:2,w:['time'],hint:'Drag the year, or press Play',
+  title:'Run time forward',
+  body:()=>`<p>Each technology gets cheaper on its own learning curve. Press <b>Play</b> or drag the year, and watch for three things no single curve can tell you:</p>
+   <ol><li>${nm('h2')} reaches parity about ${Math.floor(X.h2own)-Math.floor(X.h2)} years earlier than its own curve says, because solar makes power cheaper.</li>
+   <li>That success turns ${nm('irid')} into a new bottleneck.</li>
+   <li>VC money then crowds into the ${nm('est')} all at once.</li></ol>`},
+ {demo:3,w:['year2','qs','moat'],lit:['labels'],hint:'Tap a dot, drag the year',
+  title:'Now picture your own world',
+  body:()=>`<p>Same maths, generic labels. Read the dots as your portfolio, your suppliers, your grid or your research field.</p>
+   <p><b>Tap a dot</b> to shock it, <b>drag the year</b> to move time.</p>`}
+];
+const coach=$('coach'),dots=$('dots'),panelEl=$('panel');
+TOUR.forEach((_,k)=>{const b=document.createElement('button');b.setAttribute('aria-label','Go to step '+(k+1));b.onclick=()=>goTour(k);dots.appendChild(b)});
+function renderCoach(){
+  if(tour<0)return;const st=TOUR[tour];
+  $('prog').textContent=(tour+1)+' / '+TOUR.length;
+  [...dots.children].forEach((b,k)=>{b.toggleAttribute('aria-current',k===tour);if(k===tour)b.setAttribute('aria-current','step');b.classList.toggle('done',k<tour)});
+  $('cTitle').textContent=st.title;
+  $('cBody').innerHTML=st.body();
+  $('tourBack').disabled=tour===0;
+  $('tourNext').textContent=tour===TOUR.length-1?'Finish':'Next →';
+  if(tour===2){lastBand=-1;document.querySelectorAll('.layers li').forEach(li=>{const c=+li.dataset.col;
+    li.onmouseenter=()=>{colPin=c;lastBand=-1};li.onmouseleave=()=>{colPin=-1;tourT0=performance.now()-1900*c;lastBand=-1};
+    li.onclick=()=>{colPin=colPin===c?-1:c;tourT0=performance.now()-1900*c;lastBand=-1}})}
+  const rp=$('replay');if(rp)rp.onclick=()=>{if(shock)shock.t0=performance.now()};
+}
+function goTour(k){
+  const first=tour<0;
+  tour=k;tourT0=performance.now();colPin=-1;lastBand=-1;autoFocus=k===4;
+  const st=TOUR[k];
+  document.body.classList.add('touring');coach.hidden=false;
+  ROUND=k===5?ROUND_SLOW:ROUND_FAST;
+  if(k<8&&generic)setGeneric(false);
+  setStep(st.demo);
+  if(st.enter)st.enter();
+  document.querySelectorAll('[data-w]').forEach(el=>el.hidden=!st.w.includes(el.dataset.w));
+  panelEl.hidden=!st.w.length;
+  document.querySelectorAll('[data-lit]').forEach(el=>el.classList.toggle('lit',(st.lit||[]).includes(el.dataset.lit)));
+  $('hint').textContent=st.hint;
+  renderCoach();requestAnimationFrame(drawChart);
+  const sheet=getComputedStyle(coach).position==='fixed', beh=RM?'auto':'smooth';
+  if(sheet){const m=cv.getBoundingClientRect();if(first||m.top<-40||m.top>innerHeight*.3)cv.scrollIntoView({behavior:beh,block:'start'})}
+  else{const ct=coach.getBoundingClientRect().top;
+    if(first)$('stage').scrollIntoView({behavior:beh,block:'start'});
+    else if(ct<0||ct>innerHeight*.6)coach.scrollIntoView({behavior:beh,block:'start'})}
+}
+function endTour(){
+  if(tour<0)return;
+  tour=-1;autoFocus=false;colPin=-1;ROUND=ROUND_FAST;
+  document.body.classList.remove('touring');coach.hidden=true;panelEl.hidden=false;
+  document.querySelectorAll('[data-w]').forEach(el=>el.hidden=false);
+  document.querySelectorAll('[data-lit]').forEach(el=>el.classList.remove('lit'));
+  $('hint').textContent=hints[step];focus=-1;focusInfo();
+  if(shock)shock.t0=performance.now()-40*ROUND;
+  $('startTour').textContent='Restart walkthrough →';
+  requestAnimationFrame(drawChart);
+}
+$('startTour').onclick=()=>goTour(0);
+$('tourX').onclick=endTour;
+$('tourBack').onclick=()=>{if(tour>0)goTour(tour-1)};
+$('tourNext').onclick=()=>{if(tour<TOUR.length-1)goTour(tour+1);else endTour()};
+document.addEventListener('keydown',ev=>{
+  if(tour<0)return;
+  if(ev.key==='Escape'){endTour();return}
+  if(ev.target.matches('input,[role=tab]'))return;
+  if(ev.key==='ArrowRight'&&tour<TOUR.length-1)goTour(tour+1);
+  if(ev.key==='ArrowLeft'&&tour>0)goTour(tour-1);
+});
+
+new ResizeObserver(()=>{layout();drawChart()}).observe(cv);
+addEventListener('resize',drawChart);
 layout();renderEvents();requestAnimationFrame(tick);
 })();
 </script>
-
-</body></html>
+</body>
+</html>
